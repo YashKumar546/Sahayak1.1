@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate Content - Sahayak</title>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js" type="module"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js" type="module"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #1e40af;
+            --accent: #60a5fa;
+            --text: #1f2937;
+            --light: #f3f4f6;
+            --gray: #6b7280;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background-color: var(--light);
+            min-height: 100vh;
+        }
+
+        .header {
+            background-color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-name {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .logout-button {
+            padding: 0.5rem 1rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .logout-button:hover {
+            background-color: var(--secondary);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .generate-section {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            color: var(--text);
+            margin-bottom: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        select, textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            background-color: white;
+        }
+
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+        }
+
+        .generate-button {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .generate-button:hover {
+            background-color: var(--secondary);
+        }
+
+        .generate-button:disabled {
+            background-color: var(--gray);
+            cursor: not-allowed;
+        }
+
+        .result-section {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .result-content {
+            white-space: pre-wrap;
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: var(--gray);
+            margin: 1rem 0;
+        }
+
+        .error-message {
+            color: #dc2626;
+            margin-top: 0.5rem;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <a href="dashboard.html" style="text-decoration: none;"><div class="logo">Sahayak</div></a>
+        <div class="user-menu">
+            <span class="user-name" id="userName">Loading...</span>
+            <button class="logout-button" id="logoutButton">Logout</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <section class="generate-section">
+            <h2 class="section-title">Generate Educational Content</h2>
+            <form id="generateForm">
+                <div class="form-group">
+                    <label for="contentType">Content Type</label>
+                    <select id="contentType" required>
+                        <option value="story">Story</option>
+                        <option value="worksheet">Worksheet</option>
+                        <option value="explanation">Concept Explanation</option>
+                        <option value="visual">Visual Aid Description</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="language">Language</label>
+                    <select id="language" required>
+                        <option value="english">English</option>
+                        <option value="hindi">Hindi</option>
+                        <option value="marathi">Marathi</option>
+                        <option value="gujarati">Gujarati</option>
+                        <option value="tamil">Tamil</option>
+                        <option value="telugu">Telugu</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="prompt">Describe what you want to generate</label>
+                    <textarea id="prompt" required placeholder="Example: Create a story about farmers to explain different soil types"></textarea>
+                </div>
+                <button type="submit" class="generate-button" id="generateButton">Generate Content</button>
+                <div class="loading" id="loading">Generating content...</div>
+                <div class="error-message" id="errorMessage"></div>
+            </form>
+        </section>
+
+        <section class="result-section" id="resultSection" style="display: none;">
+            <h2 class="section-title">Generated Content</h2>
+            <div class="result-content" id="resultContent"></div>
+        </section>
+    </div>
+
+    <script type="module">
+        // Get DOM elements
+        const userNameElement = document.getElementById('userName');
+        const logoutButton = document.getElementById('logoutButton');
+        const generateForm = document.getElementById('generateForm');
+        const generateButton = document.getElementById('generateButton');
+        const loading = document.getElementById('loading');
+        const errorMessage = document.getElementById('errorMessage');
+        const resultSection = document.getElementById('resultSection');
+        const resultContent = document.getElementById('resultContent');
+
+        // Set default user name
+        userNameElement.textContent = 'Guest User';
+
+        // Handle logout - simple redirect
+        logoutButton.addEventListener('click', () => {
+            window.location.href = 'signin.html';
+        });
+
+        // Handle form submission
+        generateForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const contentType = document.getElementById('contentType').value;
+            const language = document.getElementById('language').value;
+            const prompt = document.getElementById('prompt').value;
+
+            // Show loading state
+            generateButton.disabled = true;
+            loading.style.display = 'block';
+            errorMessage.style.display = 'none';
+            resultSection.style.display = 'none';
+
+            try {
+                console.log('Sending request with:', { contentType, language, prompt });
+                const response = await fetch('http://localhost:3000/api/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        contentType,
+                        language,
+                        prompt
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to generate content');
+                }
+
+                if (!data.content) {
+                    throw new Error('No content received from the server');
+                }
+
+                resultContent.textContent = data.content;
+                resultSection.style.display = 'block';
+            } catch (error) {
+                errorMessage.textContent = 'An error occurred while generating content. Please try again.';
+                errorMessage.style.display = 'block';
+                console.error('Error:', error);
+            } finally {
+                generateButton.disabled = false;
+                loading.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reading Assessment - Sahayak</title>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js" type="module"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js" type="module"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #1e40af;
+            --accent: #60a5fa;
+            --text: #1f2937;
+            --light: #f3f4f6;
+            --gray: #6b7280;
+            --success: #059669;
+            --error: #dc2626;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background-color: var(--light);
+            min-height: 100vh;
+        }
+
+        .header {
+            background-color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-name {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .logout-button {
+            padding: 0.5rem 1rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .logout-button:hover {
+            background-color: var(--secondary);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: margin-left 0.3s;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            color: var(--text);
+            margin-bottom: 1rem;
+        }
+
+        .assessment-section {
+            margin-top: 2rem;
+        }
+
+        .student-info {
+            margin-bottom: 2rem;
+        }
+
+        .input-group {
+            margin-bottom: 1rem;
+        }
+
+        .input-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .text-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--gray);
+            border-radius: 0.375rem;
+            font-size: 1rem;
+        }
+
+        .reading-passage {
+            margin: 2rem 0;
+            padding: 1.5rem;
+            background-color: var(--light);
+            border-radius: 0.5rem;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .control-button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .record-button {
+            background-color: var(--error);
+            color: white;
+        }
+
+        .record-button.recording {
+            background-color: var(--success);
+        }
+
+        .play-button {
+            background-color: var(--accent);
+            color: white;
+        }
+
+        .submit-button {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .results-section {
+            margin-top: 2rem;
+            display: none;
+        }
+
+        .results-card {
+            padding: 1.5rem;
+            border: 1px solid var(--gray);
+            border-radius: 0.5rem;
+        }
+
+        .metric {
+            margin-bottom: 1rem;
+        }
+
+        .metric-label {
+            font-weight: 500;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-value {
+            font-size: 1.25rem;
+            color: var(--primary);
+        }
+
+        .feedback {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--gray);
+        }
+
+        .audio-player {
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 1rem 0;
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            background-color: var(--light);
+        }
+
+        .status-indicator .material-icons {
+            font-size: 1.25rem;
+        }
+
+        .recording-status {
+            color: var(--error);
+        }
+
+        .recording-status.active {
+            color: var(--success);
+        }
+        .sidebar-toggle {
+            position: fixed;
+            top: 5.5rem; /* Shift below header/logo */
+            left: 1rem;
+            background: white;
+            border: none;
+            border-radius: 0.375rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+            padding: 0.5rem;
+            z-index: 20;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: left 0.3s;
+        }
+        .sidebar.closed + .sidebar-toggle {
+            left: 1rem;
+        }
+        .sidebar-toggle .material-icons {
+            font-size: 2rem;
+            color: var(--primary);
+        }
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 240px;
+            background: white;
+            box-shadow: 2px 0 8px rgba(0,0,0,0.07);
+            padding: 1.5rem 1rem 1rem 1rem; /* Reduce top padding */
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            transition: transform 0.3s;
+        }
+        .sidebar.closed {
+            transform: translateX(-260px);
+        }
+        .sidebar-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            margin-top: 0;
+            text-align: center;
+        }
+        .grade-list {
+            list-style: none;
+            padding: 0;
+            margin: 2.5rem 0 0 0; /* Shift grades lower in sidebar */
+        }
+        .grade-item {
+            margin-bottom: 0.5rem;
+        }
+        .grade-btn {
+            width: 100%;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 0.375rem;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            font-size: 1rem;
+            text-align: left;
+            margin-bottom: 0.2rem;
+            transition: background 0.2s;
+        }
+        .grade-btn:hover, .grade-btn.active {
+            background: var(--primary);
+        }
+        .section-dropdown {
+            margin-left: 1rem;
+            margin-top: 0.3rem;
+            margin-bottom: 0.5rem;
+            display: none;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+        .section-dropdown.open {
+            display: flex;
+        }
+        .section-btn {
+            background: var(--gray);
+            color: white;
+            border: none;
+            border-radius: 0.375rem;
+            padding: 0.3rem 1rem;
+            cursor: pointer;
+            font-size: 0.95rem;
+            margin-bottom: 0.2rem;
+            transition: background 0.2s;
+            text-align: left;
+        }
+        .section-btn:hover {
+            background: var(--primary);
+        }
+        @media (max-width: 900px) {
+            .sidebar {
+                position: static;
+                width: 100%;
+                height: auto;
+                flex-direction: row;
+                gap: 1rem;
+                padding: 1rem;
+                transform: none !important;
+            }
+            .sidebar-toggle {
+                position: absolute;
+                top: 5.5rem;
+                left: 1rem;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+</head>
+<body>
+    <header class="header">
+        <a href="dashboard.html" class="logo" style="display: flex; align-items: center;">
+            <!-- Removed the menu icon from the logo -->
+            Sahayak
+        </a>
+        <div class="user-menu">
+            <span class="user-name" id="userName">Loading...</span>
+            <button class="logout-button" id="logoutButton">Logout</button>
+        </div>
+    </header>
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-title">Grades & Sections</div>
+        <ul class="grade-list" id="gradeList">
+            <!-- Grades and sections will be rendered here -->
+        </ul>
+    </div>
+    <button id="sidebarToggle" class="sidebar-toggle" aria-label="Toggle sidebar">
+        <span class="material-icons" id="sidebarToggleIcon">chevron_left</span>
+    </button>
+    <div class="container" id="mainContainer">
+        <h1 class="page-title">Reading Assessment</h1>
+
+        <div class="assessment-section">
+            <div class="student-info">
+                <div class="input-group">
+                    <label class="input-label" for="studentName">Student Name:</label>
+                    <input type="text" id="studentName" class="text-input" placeholder="Enter student's name">
+                </div>
+                <div class="input-group">
+                    <label class="input-label" for="gradeLevel">Grade Level:</label>
+                    <select id="gradeLevel" class="text-input">
+                        <option value="1">Grade 1</option>
+                        <option value="2">Grade 2</option>
+                        <option value="3">Grade 3</option>
+                        <option value="4">Grade 4</option>
+                        <option value="5">Grade 5</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="reading-passage" id="readingPassage">
+                <!-- Reading passage will be loaded here based on grade level -->
+                Select a grade level to load an appropriate reading passage.
+            </div>
+
+            <div class="status-indicator">
+                <span class="material-icons recording-status" id="recordingStatus">mic</span>
+                <span id="statusText">Ready to record</span>
+            </div>
+
+            <div class="controls">
+                <button id="recordButton" class="control-button record-button">
+                    <span class="material-icons">mic</span>
+                    Start Recording
+                </button>
+                <button id="playButton" class="control-button play-button" disabled>
+                    <span class="material-icons">play_arrow</span>
+                    Play Recording
+                </button>
+                <button id="submitButton" class="control-button submit-button" disabled>
+                    <span class="material-icons">check</span>
+                    Submit Assessment
+                </button>
+            </div>
+
+            <audio id="audioPlayer" class="audio-player" controls style="display: none;"></audio>
+        </div>
+
+        <div class="results-section" id="resultsSection">
+            <h2 class="section-title">Assessment Results</h2>
+            <div class="results-card">
+                <div class="metric">
+                    <div class="metric-label">Reading Speed (Words per Minute)</div>
+                    <div class="metric-value" id="readingSpeed">-</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">Accuracy</div>
+                    <div class="metric-value" id="accuracy">-</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">Fluency Score</div>
+                    <div class="metric-value" id="fluencyScore">-</div>
+                </div>
+                <div class="feedback" id="feedback">
+                    <!-- Feedback will be displayed here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Get DOM elements
+        const userNameElement = document.getElementById('userName');
+        const logoutButton = document.getElementById('logoutButton');
+        const studentNameInput = document.getElementById('studentName');
+        const gradeLevelSelect = document.getElementById('gradeLevel');
+        const readingPassage = document.getElementById('readingPassage');
+        const recordButton = document.getElementById('recordButton');
+        const playButton = document.getElementById('playButton');
+        const submitButton = document.getElementById('submitButton');
+        const audioPlayer = document.getElementById('audioPlayer');
+        const resultsSection = document.getElementById('resultsSection');
+        const recordingStatus = document.getElementById('recordingStatus');
+        const statusText = document.getElementById('statusText');
+
+        let mediaRecorder;
+        let audioChunks = [];
+        let isRecording = false;
+
+        // Sample reading passages by grade level
+        const passages = {
+            1: "The cat sat on the mat. It was a sunny day. The cat was happy.",
+            2: "Tom and Sara went to the park. They saw many birds flying in the sky. The birds were singing sweet songs.",
+            3: "The old library was full of interesting books. Many students came there to read and learn new things every day.",
+            4: "During the summer vacation, Maria decided to start a small garden in her backyard. She planted different types of flowers and vegetables.",
+            5: "The ancient civilization of Egypt built magnificent pyramids along the Nile River. These structures have survived for thousands of years."
+        };
+
+        // Set default user name
+        userNameElement.textContent = 'Guest User';
+
+        // Handle logout - simple redirect
+        logoutButton.addEventListener('click', () => {
+            window.location.href = 'signin.html';
+        });
+
+        // Handle grade level change
+        gradeLevelSelect.addEventListener('change', () => {
+            const grade = gradeLevelSelect.value;
+            readingPassage.textContent = passages[grade] || 'Select a grade level';
+        });
+
+        // Handle record button click
+        recordButton.addEventListener('click', async () => {
+            if (!isRecording) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+
+                    mediaRecorder.ondataavailable = (event) => {
+                        audioChunks.push(event.data);
+                    };
+
+                    mediaRecorder.onstop = () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                        audioPlayer.src = URL.createObjectURL(audioBlob);
+                        audioPlayer.style.display = 'block';
+                        playButton.disabled = false;
+                        submitButton.disabled = false;
+                    };
+
+                    mediaRecorder.start();
+                    isRecording = true;
+                    recordButton.textContent = 'Stop Recording';
+                    recordButton.classList.add('recording');
+                    recordingStatus.classList.add('active');
+                    statusText.textContent = 'Recording...';
+                } catch (error) {
+                    console.error('Error accessing microphone:', error);
+                    alert('Error accessing microphone. Please ensure microphone permissions are granted.');
+                }
+            } else {
+                mediaRecorder.stop();
+                isRecording = false;
+                recordButton.textContent = 'Start Recording';
+                recordButton.classList.remove('recording');
+                recordingStatus.classList.remove('active');
+                statusText.textContent = 'Recording complete';
+            }
+        });
+
+        // Handle play button click
+        playButton.addEventListener('click', () => {
+            audioPlayer.play();
+        });
+
+        // Handle submit button click
+        submitButton.addEventListener('click', () => {
+            const studentName = studentNameInput.value.trim();
+            if (!studentName) {
+                alert('Please enter student name');
+                return;
+            }
+
+            // TODO: Implement actual assessment analysis
+            // For now, show mock results
+            resultsSection.style.display = 'block';
+            document.getElementById('readingSpeed').textContent = '85 WPM';
+            document.getElementById('accuracy').textContent = '92%';
+            document.getElementById('fluencyScore').textContent = '4.2/5.0';
+            document.getElementById('feedback').innerHTML = `
+                <h3 style="margin-bottom: 1rem; color: var(--text);">Feedback</h3>
+                <p style="color: var(--gray); line-height: 1.5;">
+                    ${studentName} demonstrates good reading skills with room for improvement in pacing and expression. 
+                    Continue practicing with similar-level texts and focus on maintaining consistent speed while ensuring proper pronunciation.
+                </p>
+            `;
+        });
+
+        // Sidebar grades and sections logic
+        const gradeList = document.getElementById('gradeList');
+        const grades = [1, 2, 3, 4, 5];
+        const gradeSections = {
+            1: ['A', 'B', 'C'],
+            2: ['A', 'B', 'C'],
+            3: ['A', 'B', 'C'],
+            4: ['A', 'B', 'C'],
+            5: ['A', 'B', 'C']
+        };
+
+        function renderSidebarGrades() {
+            gradeList.innerHTML = grades.map(grade => `
+                <li class="grade-item">
+                    <button class="grade-btn" data-grade="${grade}">Grade ${grade}</button>
+                    <div class="section-dropdown" id="sections-${grade}">
+                        ${gradeSections[grade].map(section => `
+                            <button class="section-btn" data-grade="${grade}" data-section="${section}">
+                                Section ${section}
+                            </button>
+                        `).join('')}
+                    </div>
+                </li>
+            `).join('');
+        }
+
+        renderSidebarGrades();
+
+        // Toggle section dropdown on grade click
+        gradeList.addEventListener('click', (e) => {
+            if (e.target.classList.contains('grade-btn')) {
+                const grade = e.target.getAttribute('data-grade');
+                document.querySelectorAll('.grade-btn').forEach(btn => btn.classList.remove('active'));
+                e.target.classList.add('active');
+                document.querySelectorAll('.section-dropdown').forEach(drop => drop.classList.remove('open'));
+                document.getElementById(`sections-${grade}`).classList.add('open');
+            }
+            if (e.target.classList.contains('section-btn')) {
+                const grade = e.target.getAttribute('data-grade');
+                const section = e.target.getAttribute('data-section');
+                alert(`Selected Grade ${grade}, Section ${section}`);
+                // Add your logic here for filtering or loading data
+            }
+        });
+
+        // Sidebar toggle logic
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebarToggleIcon = document.getElementById('sidebarToggleIcon');
+        const sidebar = document.getElementById('sidebar');
+        let sidebarOpen = true;
+
+        sidebarToggle.addEventListener('click', () => {
+            sidebarOpen = !sidebarOpen;
+            if (sidebarOpen) {
+                sidebar.classList.remove('closed');
+                sidebarToggleIcon.textContent = 'chevron_left';
+            } else {
+                sidebar.classList.add('closed');
+                sidebarToggleIcon.textContent = 'chevron_right';
+            }
+        });
+    </script>
+</body>
+</html>

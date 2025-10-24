@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Differentiated Learning - Sahayak</title>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js" type="module"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js" type="module"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #1e40af;
+            --accent: #60a5fa;
+            --text: #1f2937;
+            --light: #f3f4f6;
+            --gray: #6b7280;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background-color: var(--light);
+            min-height: 100vh;
+        }
+
+        .header {
+            background-color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-name {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .logout-button {
+            padding: 0.5rem 1rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .logout-button:hover {
+            background-color: var(--secondary);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .page-title {
+            font-size: 2rem;
+            color: var(--text);
+            margin-bottom: 1rem;
+        }
+
+        .upload-section {
+            margin-top: 2rem;
+            padding: 2rem;
+            border: 2px dashed var(--gray);
+            border-radius: 0.5rem;
+            text-align: center;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: var(--gray);
+            margin-bottom: 1rem;
+        }
+
+        .upload-text {
+            color: var(--text);
+            margin-bottom: 1rem;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-button {
+            padding: 0.75rem 1.5rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .upload-button:hover {
+            background-color: var(--secondary);
+        }
+
+        .grade-selector {
+            margin-top: 2rem;
+        }
+
+        .grade-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .grade-select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--gray);
+            border-radius: 0.375rem;
+            margin-bottom: 1rem;
+        }
+
+        .generate-button {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .generate-button:hover {
+            background-color: var(--secondary);
+        }
+
+        .preview-section {
+            margin-top: 2rem;
+            display: none;
+        }
+
+        .preview-title {
+            font-size: 1.25rem;
+            color: var(--text);
+            margin-bottom: 1rem;
+        }
+
+        .preview-content {
+            padding: 1rem;
+            border: 1px solid var(--gray);
+            border-radius: 0.375rem;
+            min-height: 200px;
+        }
+    </style>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+</head>
+<body>
+    <header class="header">
+        <a href="dashboard.html" class="logo">Sahayak</a>
+        <div class="user-menu">
+            <span class="user-name" id="userName">Loading...</span>
+            <button class="logout-button" id="logoutButton">Logout</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1 class="page-title">Differentiated Learning</h1>
+        
+        <div class="upload-section" id="uploadSection">
+            <span class="material-icons upload-icon">upload_file</span>
+            <p class="upload-text">Upload textbook pages to generate differentiated worksheets</p>
+            <input type="file" id="fileInput" class="file-input" accept="image/*,.pdf" multiple>
+            <button class="upload-button" onclick="document.getElementById('fileInput').click()">Choose Files</button>
+            <div id="filePreview" style="margin-top:1rem;"></div>
+        </div>
+
+        <div class="grade-selector">
+            <label class="grade-label">Select Target Grade Levels:</label>
+            <select class="grade-select" id="gradeSelect" multiple>
+                <option value="1">Grade 1</option>
+                <option value="2">Grade 2</option>
+                <option value="3">Grade 3</option>
+                <option value="4">Grade 4</option>
+                <option value="5">Grade 5</option>
+            </select>
+            <button class="generate-button" id="generateButton">Generate Worksheets</button>
+        </div>
+
+        <div class="preview-section" id="previewSection">
+            <h2 class="preview-title">Generated Worksheets</h2>
+            <div class="preview-content" id="previewContent"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Get DOM elements
+        const userNameElement = document.getElementById('userName');
+        const logoutButton = document.getElementById('logoutButton');
+        const fileInput = document.getElementById('fileInput');
+        const filePreview = document.getElementById('filePreview');
+        const uploadSection = document.getElementById('uploadSection');
+        const generateButton = document.getElementById('generateButton');
+        const previewSection = document.getElementById('previewSection');
+        const previewContent = document.getElementById('previewContent');
+
+        // Set default user name
+        userNameElement.textContent = 'Guest User';
+
+        // Handle logout - simple redirect
+        logoutButton.addEventListener('click', () => {
+            window.location.href = 'signin.html';
+        });
+
+        let uploadedFiles = [];
+
+        function renderFilePreviews() {
+            if (uploadedFiles.length === 0) {
+                filePreview.innerHTML = '';
+                uploadSection.querySelector('.upload-icon').style.display = '';
+                uploadSection.querySelector('.upload-text').style.display = '';
+                return;
+            }
+            uploadSection.querySelector('.upload-icon').style.display = 'none';
+            uploadSection.querySelector('.upload-text').style.display = 'none';
+
+            filePreview.innerHTML = uploadedFiles.map((file, idx) => {
+                let previewHtml = `<div style="margin-bottom:1rem;border:1px solid #eee;padding:0.5rem;border-radius:0.5rem;display:flex;align-items:center;gap:1rem;position:relative;">
+                    <div>
+                        <strong>File Name:</strong> ${file.name}<br>`;
+                if (file.type.startsWith('image/')) {
+                    previewHtml += `<img src="${file.preview}" alt="Preview" style="max-width:100px;max-height:100px;margin-top:0.5rem;border-radius:0.5rem;">`;
+                } else if (file.type === 'application/pdf') {
+                    previewHtml += `<span class="material-icons" style="font-size:2rem;color:var(--gray);vertical-align:middle;">picture_as_pdf</span>`;
+                } else {
+                    previewHtml += `<em>No preview available for this file type.</em>`;
+                }
+                previewHtml += `</div>
+    <button class="upload-button" style="background-color:var(--error);margin-left:auto;display:flex;align-items:center;gap:0.3rem;" data-remove="${idx}">
+        <span class="material-icons" style="font-size:1.2rem;color:#dc2626;">close</span> Remove
+    </button>
+</div>`;
+                return previewHtml;
+            }).join('');
+        }
+
+        // Handle file input change
+        fileInput.addEventListener('change', (event) => {
+            const files = Array.from(event.target.files);
+            if (files.length > 0) {
+                uploadedFiles = files.map(file => {
+                    return {
+                        name: file.name,
+                        type: file.type,
+                        preview: URL.createObjectURL(file)
+                    };
+                });
+                renderFilePreviews();
+            } else {
+                uploadedFiles = [];
+                renderFilePreviews();
+            }
+        });
+
+        filePreview.addEventListener('click', (event) => {
+            // Fix: Check if the clicked element or its parent is the remove button
+            let btn = event.target.closest('button[data-remove]');
+            if (btn) {
+                const index = Number(btn.getAttribute('data-remove'));
+                uploadedFiles.splice(index, 1);
+                renderFilePreviews();
+                fileInput.value = ''; // Allow re-upload of same file
+            }
+        });
+
+        // Handle generate button click
+        generateButton.addEventListener('click', () => {
+            const selectedGrades = Array.from(document.getElementById('gradeSelect').selectedOptions)
+                .map(option => option.value);
+            
+            if (selectedGrades.length === 0) {
+                alert('Please select at least one grade level');
+                return;
+            }
+
+            if (uploadedFiles.length === 0) {
+                alert('Please upload at least one file');
+                return;
+            }
+
+            // TODO: Implement worksheet generation
+            console.log('Generating worksheets for grades:', selectedGrades);
+            
+            // Show preview section (mock data)
+            previewSection.style.display = 'block';
+            previewContent.innerHTML = `<p>Generated worksheets for grades: ${selectedGrades.join(', ')}</p>`;
+        });
+    </script>
+</body>
+</html>

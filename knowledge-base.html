@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Knowledge Base - Sahayak</title>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js" type="module"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js" type="module"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #1e40af;
+            --accent: #60a5fa;
+            --text: #1f2937;
+            --light: #f3f4f6;
+            --gray: #6b7280;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background-color: var(--light);
+            min-height: 100vh;
+        }
+
+        .header {
+            background-color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-name {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .logout-button {
+            padding: 0.5rem 1rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .logout-button:hover {
+            background-color: var(--secondary);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .page-title {
+            font-size: 2rem;
+            color: var(--text);
+            margin-bottom: 1rem;
+        }
+
+        .search-section {
+            margin-top: 2rem;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 1rem;
+            border: 1px solid var(--gray);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .language-selector {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--gray);
+            border-radius: 0.375rem;
+            margin-bottom: 1rem;
+        }
+
+        .search-button {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 1rem;
+        }
+
+        .search-button:hover {
+            background-color: var(--secondary);
+        }
+
+        .results-section {
+            margin-top: 2rem;
+            display: none;
+        }
+
+        .result-card {
+            background-color: var(--light);
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .result-title {
+            font-size: 1.25rem;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        .result-content {
+            color: var(--gray);
+            line-height: 1.5;
+        }
+
+        .history-section {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--gray);
+        }
+
+        .history-title {
+            font-size: 1.25rem;
+            color: var(--text);
+            margin-bottom: 1rem;
+        }
+
+        .history-list {
+            list-style: none;
+        }
+
+        .history-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--light);
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .history-item:hover {
+            background-color: var(--light);
+        }
+    </style>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+</head>
+<body>
+    <header class="header">
+        <a href="dashboard.html" class="logo">Sahayak</a>
+        <div class="user-menu">
+            <span class="user-name" id="userName">Loading...</span>
+            <button class="logout-button" id="logoutButton">Logout</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1 class="page-title">Knowledge Base</h1>
+        
+        <div class="search-section">
+            <input type="text" class="search-box" id="searchInput" placeholder="Enter your question here...">
+            <select class="language-selector" id="languageSelect">
+                <option value="en">English</option>
+                <option value="hi">Hindi</option>
+                <option value="bn">Bengali</option>
+                <option value="te">Telugu</option>
+                <option value="ta">Tamil</option>
+                <option value="mr">Marathi</option>
+            </select>
+            <button class="search-button" id="searchButton">
+                <span class="material-icons" style="vertical-align: middle; margin-right: 0.5rem;">search</span>
+                Get Answer
+            </button>
+        </div>
+
+        <div class="results-section" id="resultsSection">
+            <div class="result-card">
+                <h3 class="result-title">Answer</h3>
+                <p class="result-content" id="resultContent"></p>
+            </div>
+        </div>
+
+        <div class="history-section">
+            <h2 class="history-title">Recent Questions</h2>
+            <ul class="history-list" id="historyList">
+                <!-- History items will be added here dynamically -->
+            </ul>
+        </div>
+    </div>
+
+    <script type="module">
+        // Get DOM elements
+        const userNameElement = document.getElementById('userName');
+        const logoutButton = document.getElementById('logoutButton');
+        const searchInput = document.getElementById('searchInput');
+        const languageSelect = document.getElementById('languageSelect');
+        const searchButton = document.getElementById('searchButton');
+        const resultsSection = document.getElementById('resultsSection');
+        const resultContent = document.getElementById('resultContent');
+        const historyList = document.getElementById('historyList');
+
+        // Set default user name
+        userNameElement.textContent = 'Guest User';
+
+        // Handle logout - simple redirect
+        logoutButton.addEventListener('click', () => {
+            window.location.href = 'signin.html';
+        });
+
+        // Handle search
+        searchButton.addEventListener('click', async () => {
+            const question = searchInput.value.trim();
+            const language = languageSelect.value;
+
+            if (!question) {
+                alert('Please enter a question');
+                return;
+            }
+
+            // TODO: Implement API call to get answer
+            console.log('Searching for answer:', { question, language });
+
+            // Show mock result
+            resultsSection.style.display = 'block';
+            resultContent.textContent = `Here is a simple explanation for "${question}" in ${language}.`;
+
+            // Add to history
+            addToHistory(question);
+        });
+
+        // Add question to history
+        function addToHistory(question) {
+            const li = document.createElement('li');
+            li.className = 'history-item';
+            li.textContent = question;
+            li.addEventListener('click', () => {
+                searchInput.value = question;
+                searchButton.click();
+            });
+
+            // Add to the beginning of the list
+            historyList.insertBefore(li, historyList.firstChild);
+
+            // Keep only last 5 items
+            while (historyList.children.length > 5) {
+                historyList.removeChild(historyList.lastChild);
+            }
+        }
+    </script>
+</body>
+</html>

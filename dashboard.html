@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Sahayak</title>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js" type="module"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js" type="module"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #1e40af;
+            --accent: #60a5fa;
+            --text: #1f2937;
+            --light: #f3f4f6;
+            --gray: #6b7280;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background-color: var(--light);
+            min-height: 100vh;
+        }
+
+        .header {
+            background-color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-name {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .logout-button {
+            padding: 0.5rem 1rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .logout-button:hover {
+            background-color: var(--secondary);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .welcome-section {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .welcome-title {
+            font-size: 2rem;
+            color: var(--text);
+            margin-bottom: 1rem;
+        }
+
+        .welcome-subtitle {
+            color: var(--gray);
+            font-size: 1.1rem;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-decoration: none;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .feature-title {
+            font-size: 1.25rem;
+            color: var(--text);
+            margin-bottom: 1rem;
+        }
+
+        .feature-description {
+            color: var(--gray);
+            line-height: 1.5;
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+    </style>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+</head>
+<body>
+    <header class="header">
+        <a href="dashboard.html" style="text-decoration: none;"><div class="logo">Sahayak</div></a>
+        <div class="user-menu">
+            <span class="user-name" id="userName">Loading...</span>
+            <button class="logout-button" id="logoutButton">Logout</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <section class="welcome-section">
+            <h1 class="welcome-title">Welcome to Your Dashboard</h1>
+            <p class="welcome-subtitle">Get started with your AI-powered teaching assistant</p>
+        </section>
+
+        <div class="features-grid">
+            <a href="generate copy.html" class="feature-card">
+                <span class="material-icons feature-icon">auto_stories</span>
+                <h2 class="feature-title">Generate Content</h2>
+                <p class="feature-description">Create localized stories, worksheets, and visual aids in multiple languages using AI.</p>
+            </a>
+            <a href="differentiated-learning copy.html" class="feature-card">
+                <span class="material-icons feature-icon">school</span>
+                <h2 class="feature-title">Differentiated Learning</h2>
+                <p class="feature-description">Upload textbook pages to generate worksheets tailored for different grade levels.</p>
+            </a>
+            <a href="knowledge-base.html" class="feature-card">
+                <span class="material-icons feature-icon">question_answer</span>
+                <h2 class="feature-title">Knowledge Base</h2>
+                <p class="feature-description">Get instant, simple explanations for complex student questions in local languages.</p>
+            </a>
+            <a href="visual-aids.html" class="feature-card">
+                <span class="material-icons feature-icon">brush</span>
+                <h2 class="feature-title">Visual Aids</h2>
+                <p class="feature-description">Generate simple drawings and charts that can be easily replicated on a blackboard.</p>
+            </a>
+            <a href="reading-assessment copy.html" class="feature-card">
+                <span class="material-icons feature-icon">record_voice_over</span>
+                <h2 class="feature-title">Reading Assessment</h2>
+                <p class="feature-description">Conduct audio-based reading assessments using advanced speech recognition.</p>
+            </a>
+            <a href="lesson-planner copy.html" class="feature-card">
+                <span class="material-icons feature-icon">calendar_today</span>
+                <h2 class="feature-title">Lesson Planner</h2>
+                <p class="feature-description">Create AI-powered weekly lesson plans that structure activities efficiently.</p>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Get DOM elements
+        const userNameElement = document.getElementById('userName');
+        const logoutButton = document.getElementById('logoutButton');
+
+        // Set default user name
+        userNameElement.textContent = "Guest User";
+
+        // Handle logout
+        logoutButton.addEventListener('click', () => {
+            window.location.href = 'signin.html';
+        });
+    </script>
+</body>
+</html>

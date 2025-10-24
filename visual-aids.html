@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual Aids - Sahayak</title>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js" type="module"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js" type="module"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #1e40af;
+            --accent: #60a5fa;
+            --text: #1f2937;
+            --light: #f3f4f6;
+            --gray: #6b7280;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background-color: var(--light);
+            min-height: 100vh;
+        }
+
+        .header {
+            background-color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-name {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .logout-button {
+            padding: 0.5rem 1rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .logout-button:hover {
+            background-color: var(--secondary);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .page-title {
+            font-size: 2rem;
+            color: var(--text);
+            margin-bottom: 1rem;
+        }
+
+        .input-section {
+            margin-top: 2rem;
+        }
+
+        .input-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .description-input {
+            width: 100%;
+            padding: 1rem;
+            border: 1px solid var(--gray);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .style-selector {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--gray);
+            border-radius: 0.375rem;
+            margin-bottom: 1rem;
+        }
+
+        .generate-button {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .generate-button:hover {
+            background-color: var(--secondary);
+        }
+
+        .preview-section {
+            margin-top: 2rem;
+            display: none;
+        }
+
+        .preview-title {
+            font-size: 1.25rem;
+            color: var(--text);
+            margin-bottom: 1rem;
+        }
+
+        .preview-canvas {
+            width: 100%;
+            border: 1px solid var(--gray);
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .download-button {
+            padding: 0.75rem 1.5rem;
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .download-button:hover {
+            background-color: var(--primary);
+        }
+
+        .tips-section {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background-color: var(--light);
+            border-radius: 0.5rem;
+        }
+
+        .tips-title {
+            font-size: 1.25rem;
+            color: var(--text);
+            margin-bottom: 1rem;
+        }
+
+        .tips-list {
+            list-style-type: none;
+        }
+
+        .tips-list li {
+            margin-bottom: 0.5rem;
+            color: var(--gray);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tips-list .material-icons {
+            color: var(--primary);
+            font-size: 1.25rem;
+        }
+    </style>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+</head>
+<body>
+    <header class="header">
+        <a href="dashboard.html" class="logo">Sahayak</a>
+        <div class="user-menu">
+            <span class="user-name" id="userName">Loading...</span>
+            <button class="logout-button" id="logoutButton">Logout</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1 class="page-title">Visual Aids Generator</h1>
+        
+        <div class="input-section">
+            <label class="input-label" for="descriptionInput">Describe what you want to draw:</label>
+            <textarea id="descriptionInput" class="description-input" placeholder="Example: A simple diagram showing the water cycle with clouds, rain, and evaporation"></textarea>
+
+            <label class="input-label" for="styleSelect">Drawing Style:</label>
+            <select id="styleSelect" class="style-selector">
+                <option value="simple">Simple Lines (Easy to draw on blackboard)</option>
+                <option value="detailed">Detailed (For handouts)</option>
+                <option value="cartoon">Cartoon Style (For younger students)</option>
+            </select>
+
+            <button id="generateButton" class="generate-button">
+                <span class="material-icons">brush</span>
+                Generate Drawing
+            </button>
+        </div>
+
+        <div id="previewSection" class="preview-section">
+            <h2 class="preview-title">Generated Drawing</h2>
+            <canvas id="previewCanvas" class="preview-canvas" width="600" height="400"></canvas>
+            <button id="downloadButton" class="download-button">
+                <span class="material-icons">download</span>
+                Download Drawing
+            </button>
+        </div>
+
+        <div class="tips-section">
+            <h2 class="tips-title">Tips for Better Results</h2>
+            <ul class="tips-list">
+                <li>
+                    <span class="material-icons">lightbulb</span>
+                    Be specific about the elements you want in your drawing
+                </li>
+                <li>
+                    <span class="material-icons">format_size</span>
+                    Keep it simple for blackboard reproduction
+                </li>
+                <li>
+                    <span class="material-icons">view_agenda</span>
+                    Mention if you need labels or annotations
+                </li>
+                <li>
+                    <span class="material-icons">aspect_ratio</span>
+                    Specify the desired size or orientation if important
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <script type="module">
+        // Get DOM elements
+        const userNameElement = document.getElementById('userName');
+        const logoutButton = document.getElementById('logoutButton');
+        const descriptionInput = document.getElementById('descriptionInput');
+        const styleSelect = document.getElementById('styleSelect');
+        const generateButton = document.getElementById('generateButton');
+        const previewSection = document.getElementById('previewSection');
+        const previewCanvas = document.getElementById('previewCanvas');
+        const downloadButton = document.getElementById('downloadButton');
+
+        // Set default user name
+        userNameElement.textContent = 'Guest User';
+
+        // Handle logout - simple redirect
+        logoutButton.addEventListener('click', () => {
+            window.location.href = 'signin.html';
+        });
+
+        // Handle generate button click
+        generateButton.addEventListener('click', async () => {
+            const description = descriptionInput.value.trim();
+            const style = styleSelect.value;
+
+            if (!description) {
+                alert('Please describe what you want to draw');
+                return;
+            }
+
+            // TODO: Implement API call to generate drawing
+            console.log('Generating drawing:', { description, style });
+
+            // Show preview section with mock canvas drawing
+            previewSection.style.display = 'block';
+            const ctx = previewCanvas.getContext('2d');
+            ctx.fillStyle = '#f3f4f6';
+            ctx.fillRect(0, 0, previewCanvas.width, previewCanvas.height);
+            ctx.fillStyle = '#2563eb';
+            ctx.font = '20px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Drawing will be generated here', previewCanvas.width/2, previewCanvas.height/2);
+        });
+
+        // Handle download button click
+        downloadButton.addEventListener('click', () => {
+            // TODO: Implement download functionality
+            const link = document.createElement('a');
+            link.download = 'drawing.png';
+            link.href = previewCanvas.toDataURL();
+            link.click();
+        });
+    </script>
+</body>
+</html>
