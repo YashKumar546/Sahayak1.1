@@ -178,17 +178,56 @@
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+        import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBOZRRPmRBh-MQq1K-xNQKmELpZwQXOgQI",
+            authDomain: "sahayak-64b8d.firebaseapp.com",
+            projectId: "sahayak-64b8d",
+            storageBucket: "sahayak-64b8d.firebasestorage.app",
+            messagingSenderId: "1039418664019",
+            appId: "1:1039418664019:web:e9f9d6d4b3b4c3e7b3b4c3"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        
         // Get DOM elements
         const userNameElement = document.getElementById('userName');
         const logoutButton = document.getElementById('logoutButton');
 
-        // Set default user name
-        userNameElement.textContent = "Guest User";
+        // Authentication check
+        let authCheckComplete = false;
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // User is signed in
+                userNameElement.textContent = user.email || "Authenticated User";
+                authCheckComplete = true;
+            } else {
+                // User is not signed in, redirect to signin page
+                if (!sessionStorage.getItem('redirecting')) {
+                    sessionStorage.setItem('redirecting', 'true');
+                    window.location.href = 'signin.html';
+                }
+            }
+        });
 
         // Handle logout
-        logoutButton.addEventListener('click', () => {
-            window.location.href = 'signin.html';
+        logoutButton.addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+                // Redirect to index.html after logout
+                window.location.href = 'index.html';
+            } catch (error) {
+                console.error('Error signing out:', error);
+                // Redirect to index.html even if there's an error
+                window.location.href = 'index.html';
+            }
         });
     </script>
 </body>
